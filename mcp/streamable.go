@@ -104,8 +104,27 @@ func (h *StreamableHTTPHandler) ServeHTTP(w http.ResponseWriter, req *http.Reque
 		session, _ = h.sessions[id]
 		h.sessionsMu.Unlock()
 		if session == nil {
-			http.Error(w, "session not found", http.StatusNotFound)
-			return
+			s := NewStreamableServerTransport(randText(), nil)
+			server := h.getServer(req)
+			if server == nil {
+				// The getServer argument to NewStreamableHTTPHandler returned nil.
+				http.Error(w, "no server available", http.StatusBadRequest)
+				return
+			}
+			// Pass req.Context() here, to allow middleware to add context values.
+			// The context is detached in the jsonrpc2 library when handling the
+			// long-running stream.
+			if _, err := server.Connect(req.Context(), s); err != nil {
+				http.Error(w, "failed connection", http.StatusInternalServerError)
+				return
+			}
+			h.sessionsMu.Lock()
+			h.sessions[s.sessionID] = s
+			h.sessionsMu.Unlock()
+			session = s
+
+			//http.Error(w, "session not found", http.StatusNotFound)
+			//return
 		}
 	}
 
