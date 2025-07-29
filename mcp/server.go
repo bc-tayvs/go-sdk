@@ -727,18 +727,19 @@ func (ss *ServerSession) getConn() *jsonrpc2.Connection { return ss.conn }
 
 // handle invokes the method described by the given JSON RPC request.
 func (ss *ServerSession) handle(ctx context.Context, req *jsonrpc.Request) (any, error) {
-	ss.mu.Lock()
-	initialized := ss.initialized
-	ss.mu.Unlock()
+	//ss.mu.Lock()
+	//initialized := ss.initialized
+	//ss.mu.Unlock()
+
 	// From the spec:
 	// "The client SHOULD NOT send requests other than pings before the server
 	// has responded to the initialize request."
 	switch req.Method {
 	case "initialize", "ping":
 	default:
-		if !initialized {
-			return nil, fmt.Errorf("method %q is invalid during session initialization", req.Method)
-		}
+		//if !initialized {
+		//	return nil, fmt.Errorf("method %q is invalid during session initialization", req.Method)
+		//}
 	}
 	// For the streamable transport, we need the request ID to correlate
 	// server->client calls and notifications to the incoming request from which
